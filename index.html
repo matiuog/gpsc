@@ -81,7 +81,19 @@
 
       <div class="p-5 sm:p-6 space-y-5">
 
-        <!-- Banner de Solicitud de Grupo (Se activa si el enlace trae ?to=NUMERO) -->
+        <!-- Tarjeta especial Modo Sencillo / Adulto Mayor (Activa si hay ?to=...) -->
+        <div id="senior-card" class="hidden p-4 bg-emerald-50/90 border-2 border-emerald-200/80 rounded-3xl text-center space-y-1.5 shadow-sm">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-700 flex items-center justify-center mx-auto mb-1">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          </div>
+          <h2 class="text-base font-extrabold text-slate-900">Enviar mi ubicación</h2>
+          <p class="text-xs text-slate-600 font-medium" id="senior-card-subtext">Solo toca el botón verde para compartir dónde estás por WhatsApp.</p>
+        </div>
+
+        <!-- Banner de Solicitud de Grupo (Modo alternativo) -->
         <div id="group-request-banner" class="hidden p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 text-xs flex items-center space-x-3">
           <div class="w-8 h-8 rounded-xl bg-emerald-200/70 flex items-center justify-center shrink-0 text-emerald-700">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -90,7 +102,7 @@
           </div>
           <div class="flex-1">
             <p class="font-bold text-[13px]">📍 Solicitud de ubicación</p>
-            <p class="text-emerald-700 text-xs mt-0.5" id="group-request-text">Pulsa el botón abajo para enviar tus coordenadas a este destinatario.</p>
+            <p class="text-emerald-700 text-xs mt-0.5" id="group-request-text">Pulsa el botón abajo para enviar tus coordenadas.</p>
           </div>
         </div>
 
@@ -105,7 +117,7 @@
           </div>
         </div>
 
-        <!-- Formulario de Destinatario -->
+        <!-- Formulario de Destinatario (Solo visible si no se especificó número en el enlace) -->
         <div id="phone-container" class="space-y-2">
           <div class="flex items-center justify-between">
             <label for="phone-number" class="block text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -149,7 +161,7 @@
               id="phone-number" 
               name="phone"
               inputmode="numeric" 
-              placeholder="Ej: 612 345 678"
+              placeholder="Ej: 7580 1638"
               class="w-full bg-transparent px-3.5 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none font-medium"
               autocomplete="tel"
             >
@@ -171,25 +183,39 @@
           </p>
         </div>
 
-        <!-- Botón Principal Llamativo (1 Clic) -->
+        <!-- Botón Principal Llamativo (Gigante para personas mayores) -->
         <button 
           id="btn-get-location"
           type="button"
-          class="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:scale-[0.98] transition-all duration-200 py-4 px-6 text-white font-bold text-base shadow-lg shadow-emerald-500/25 flex items-center justify-center space-x-3 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed disabled:transform-none"
+          class="w-full group relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 active:scale-[0.98] transition-all duration-200 py-5 px-6 text-white font-black text-lg sm:text-xl shadow-xl shadow-emerald-600/30 flex items-center justify-center space-x-3 cursor-pointer disabled:opacity-85 disabled:cursor-not-allowed disabled:transform-none"
         >
           <!-- Efecto de brillo hover -->
           <div class="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000"></div>
 
           <!-- Icono de WhatsApp -->
-          <svg class="w-6 h-6 shrink-0 fill-current" viewBox="0 0 24 24">
+          <svg class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 fill-current" viewBox="0 0 24 24">
             <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
           </svg>
 
-          <span id="btn-text">Compartir mi ubicación</span>
+          <span id="btn-text">TOCAR AQUÍ PARA ENVIAR</span>
 
-          <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <svg class="w-6 h-6 group-hover:translate-x-1 transition-transform shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
           </svg>
+        </button>
+
+        <!-- Indicación Visual de Ayuda Sencilla -->
+        <div id="senior-help-box" class="p-3.5 bg-amber-50/90 border border-amber-200/90 rounded-2xl text-center space-y-1">
+          <p class="text-xs sm:text-sm font-bold text-amber-950 flex items-center justify-center space-x-1.5">
+            <span>👇</span>
+            <span>Si tu pantalla te pregunta: presiona <strong>"PERMITIR"</strong></span>
+          </p>
+          <p class="text-[11px] text-amber-800">Si no te aparece o no sabes qué hacer, no te preocupes: se enviará automáticamente.</p>
+        </div>
+
+        <!-- Botón de apertura directa por WhatsApp si tienen problemas -->
+        <button id="btn-direct-chat" type="button" class="w-full text-center text-xs text-slate-500 hover:text-emerald-700 underline font-medium pt-1 cursor-pointer">
+          ¿Problemas? Toca aquí para abrir WhatsApp directamente
         </button>
 
         <!-- Indicador de Carga con Radar animado -->
@@ -399,16 +425,19 @@
           const cleaned = toParam.replace(/\D/g, '');
           if (cleaned.length >= 7) {
             urlPreconfiguredPhone = cleaned;
-            groupRequestBanner.classList.remove('hidden');
-            groupRequestText.textContent = `Pulsa el botón para enviar tus coordenadas directamente a: +${cleaned}`;
             
-            // Ocultar formulario o prellenarlo en modo lectura
+            const seniorCard = document.getElementById('senior-card');
+            const phoneContainer = document.getElementById('phone-container');
+            const groupRequestBanner = document.getElementById('group-request-banner');
+            
+            if (seniorCard) seniorCard.classList.remove('hidden');
+            if (phoneContainer) phoneContainer.classList.add('hidden');
+            if (groupRequestBanner) groupRequestBanner.classList.add('hidden');
+            if (btnToggleMode) btnToggleMode.classList.add('hidden');
+
             phoneInput.value = cleaned;
-            countryCodeSelect.value = 'custom';
-            countryCodeDisplay.textContent = '+';
-            btnToggleMode.classList.add('hidden');
-            phoneInputWrapper.classList.add('opacity-75', 'pointer-events-none');
-            phoneFormatHint.textContent = `Destino fijado: +${cleaned}`;
+            countryCodeSelect.value = '503';
+            countryCodeDisplay.textContent = '+503';
             return true;
           }
         }
@@ -553,17 +582,17 @@
       });
 
       // 6. UI Loading / Error / Success
-      function setLoading(isLoading) {
+      function setLoading(isLoading, customText) {
         if (isLoading) {
           loadingState.classList.remove('hidden');
           errorState.classList.add('hidden');
           successState.classList.add('hidden');
           btnGetLocation.disabled = true;
-          btnText.textContent = 'Obteniendo GPS...';
+          btnText.textContent = customText || 'Buscando tu ubicación...';
         } else {
           loadingState.classList.add('hidden');
           btnGetLocation.disabled = false;
-          btnText.textContent = 'Compartir mi ubicación';
+          btnText.textContent = 'TOCAR AQUÍ PARA ENVIAR';
         }
       }
 
@@ -582,18 +611,18 @@
 
         const lat = coords.latitude.toFixed(6);
         const lon = coords.longitude.toFixed(6);
-        const accuracy = Math.round(coords.accuracy);
+        const isNetwork = Boolean(coords.isNetworkFallback);
+        const accuracy = Math.round(coords.accuracy || 0);
 
         displayLatitude.textContent = lat;
         displayLongitude.textContent = lon;
-        accuracyBadge.textContent = `Precisión: ±${accuracy} m`;
         
-        if (accuracy <= 15) {
-          accuracyBadge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300';
-        } else if (accuracy <= 50) {
-          accuracyBadge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300';
+        if (isNetwork) {
+          accuracyBadge.textContent = 'Ubicación por Red';
+          accuracyBadge.className = 'text-[11px] font-semibold px-2.5 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-300';
         } else {
-          accuracyBadge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-orange-100 text-orange-800 border border-orange-300';
+          accuracyBadge.textContent = `Precisión: ±${accuracy} m`;
+          accuracyBadge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300';
         }
 
         const now = new Date();
@@ -604,17 +633,24 @@
 
         // Construcción del mensaje para WhatsApp
         const fullNumber = getSanitizedFullNumber();
+        const headerText = isNetwork 
+          ? `📍 *Mi ubicación aproximada (por red):*`
+          : `📍 *Mi ubicación actual:*`;
+
+        const detailsText = isNetwork
+          ? `• Zona: ${coords.cityName || 'El Salvador'}`
+          : `• Precisión: ±${accuracy} m`;
+
         const message = 
-`📍 *Mi ubicación actual:*
+`${headerText}
 • Latitud: ${lat}
 • Longitud: ${lon}
-• Precisión: ±${accuracy} m
+${detailsText}
 
 🗺️ *Ver en Google Maps:*
 ${mapsUrl}`;
 
         const encodedMessage = encodeURIComponent(message);
-        // Si hay número destino va directo al chat; si no, abre el selector de chats/grupos de WhatsApp
         const waUrl = fullNumber 
           ? `https://wa.me/${fullNumber}?text=${encodedMessage}`
           : `https://wa.me/?text=${encodedMessage}`;
@@ -630,8 +666,8 @@ ${mapsUrl}`;
         }
       }
 
-      // 7. Manejo de Geolocalización (1 Clic)
-      function handleGetLocation() {
+      // 7. Manejo de Geolocalización y Respaldo Inteligente Sin Permisos
+      async function handleGetLocation() {
         const fullNumber = getSanitizedFullNumber();
         if (!isAnyChatMode && !urlPreconfiguredPhone && !fullNumber) {
           showError('Número requerido', 'Por favor, ingresa un número de teléfono o pulsa "¿Elegir chat/grupo al enviar?"');
@@ -639,50 +675,127 @@ ${mapsUrl}`;
           return;
         }
 
+        setLoading(true, 'Buscando tu ubicación...');
+
+        // Si el navegador no soporta geolocalización, usamos de inmediato el respaldo sin permisos
         if (!('geolocation' in navigator)) {
-          showError('No soportado', 'Tu navegador o dispositivo no soporta geolocalización.');
+          console.info('Geolocalización no soportada, pasando a respaldo sin permisos...');
+          await fallbackToIpLocation();
           return;
         }
 
-        setLoading(true);
+        // Si ya sabemos que el permiso fue denegado previamente, vamos directo al respaldo sin permisos
+        if (navigator.permissions && navigator.permissions.query) {
+          try {
+            const status = await navigator.permissions.query({ name: 'geolocation' });
+            if (status && status.state === 'denied') {
+              console.info('Permiso previamente denegado, usando respaldo por red sin permisos...');
+              await fallbackToIpLocation();
+              return;
+            }
+          } catch (e) {
+            // Continuar con flujo normal
+          }
+        }
+
+        let hasResolved = false;
+
+        // Temporizador de seguridad: si en 10s no hay respuesta (o el usuario no tocó permitir), usamos respaldo por red
+        const timerFallback = setTimeout(async () => {
+          if (!hasResolved) {
+            hasResolved = true;
+            console.info('GPS demoró, activando respaldo automático por red sin permisos...');
+            await fallbackToIpLocation();
+          }
+        }, 10000);
 
         const geoOptions = {
           enableHighAccuracy: true,
-          timeout: 60000, // 1 minuto (60,000 ms)
+          timeout: 10000,
           maximumAge: 0
         };
 
         navigator.geolocation.getCurrentPosition(
-          (pos) => showSuccess(pos.coords),
-          (err) => handleGeoError(err),
+          (pos) => {
+            if (hasResolved) return;
+            hasResolved = true;
+            clearTimeout(timerFallback);
+            showSuccess(pos.coords);
+          },
+          async (err) => {
+            if (hasResolved) return;
+            hasResolved = true;
+            clearTimeout(timerFallback);
+            console.warn('GPS falló o fue denegado, usando respaldo por red:', err.message);
+            // EN LUGAR DE MOSTRAR ERROR, SE OBTIENE LA UBICACIÓN POR RED AUTOMÁTICAMENTE
+            await fallbackToIpLocation();
+          },
           geoOptions
         );
       }
 
-      function handleGeoError(error) {
-        let title = 'Error de ubicación';
-        let msg = 'No se pudo obtener la posición GPS.';
+      // Respaldo de Ubicación por Red / IP (0 permisos necesarios)
+      async function fallbackToIpLocation() {
+        setLoading(true, 'Obteniendo por red...');
 
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            title = 'Permiso denegado';
-            msg = 'Has rechazado el acceso al GPS. Para compartir tu ubicación, activa los permisos de ubicación para esta web en tu navegador.';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            title = 'GPS no disponible';
-            msg = 'No se pudo determinar tu posición. Verifica que la ubicación/GPS de tu teléfono esté activada.';
-            break;
-          case error.TIMEOUT:
-            title = 'Tiempo agotado (1 min)';
-            msg = 'El GPS tardó más de 1 minuto en responder. Si estás en interiores, acércate a una ventana o sal a cielo abierto y reintenta.';
-            break;
-          default:
-            title = 'Error inesperado';
-            msg = error.message || 'Ocurrió un error al consultar las coordenadas.';
-            break;
+        try {
+          // Servicio 1: GeoJS
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
+          const res = await fetch('https://get.geojs.io/v1/ip/geo.json', { signal: controller.signal });
+          clearTimeout(timeoutId);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.latitude && data.longitude) {
+              showSuccess({
+                latitude: parseFloat(data.latitude),
+                longitude: parseFloat(data.longitude),
+                accuracy: 1500,
+                isNetworkFallback: true,
+                cityName: data.city || data.region || 'El Salvador'
+              });
+              return;
+            }
+          }
+        } catch (e1) {
+          console.warn('GeoJS error, probando servicio secundario...', e1);
         }
 
-        showError(title, msg);
+        try {
+          // Servicio 2: FreeIPAPI
+          const controller2 = new AbortController();
+          const timeoutId2 = setTimeout(() => controller2.abort(), 4000);
+          const res2 = await fetch('https://freeipapi.com/api/json', { signal: controller2.signal });
+          clearTimeout(timeoutId2);
+          if (res2.ok) {
+            const data2 = await res2.json();
+            if (data2.latitude && data2.longitude) {
+              showSuccess({
+                latitude: parseFloat(data2.latitude),
+                longitude: parseFloat(data2.longitude),
+                accuracy: 2500,
+                isNetworkFallback: true,
+                cityName: data2.cityName || 'El Salvador'
+              });
+              return;
+            }
+          }
+        } catch (e2) {
+          console.warn('FreeIPAPI error:', e2);
+        }
+
+        // Si ningún servicio de red responde, abrimos WhatsApp directamente al chat
+        setLoading(false);
+        openDirectWhatsAppChatFallback();
+      }
+
+      function openDirectWhatsAppChatFallback() {
+        const fullNumber = getSanitizedFullNumber();
+        const msg = encodeURIComponent("¡Hola! Te contacto para compartirte mi ubicación. (Por favor pídeme que toque el clip 📎 o + en este chat y elija 'Ubicación')");
+        const waUrl = fullNumber 
+          ? `https://wa.me/${fullNumber}?text=${msg}`
+          : `https://wa.me/?text=${msg}`;
+        window.open(waUrl, '_blank');
       }
 
       // 8. Copiar coordenadas
@@ -713,6 +826,10 @@ ${mapsUrl}`;
       // Eventos
       btnGetLocation.addEventListener('click', handleGetLocation);
       btnRetry.addEventListener('click', handleGetLocation);
+      const btnDirectChat = document.getElementById('btn-direct-chat');
+      if (btnDirectChat) {
+        btnDirectChat.addEventListener('click', openDirectWhatsAppChatFallback);
+      }
       phoneInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') handleGetLocation();
       });

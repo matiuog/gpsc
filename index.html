@@ -210,7 +210,7 @@
             <span>👇</span>
             <span>Si tu pantalla te pregunta: presiona <strong>"PERMITIR"</strong></span>
           </p>
-          <p class="text-[11px] text-amber-800">Si no te aparece o no sabes qué hacer, no te preocupes: se enviará automáticamente.</p>
+          <p class="text-[11px] text-amber-800">Tu teléfono necesita permiso para conectar con los satélites GPS y obtener tu ubicación exacta.</p>
         </div>
 
         <!-- Botón de apertura directa por WhatsApp si tienen problemas -->
@@ -422,8 +422,11 @@
         const toParam = params.get('to') || params.get('phone') || params.get('dest') || params.get('tel');
 
         if (toParam) {
-          const cleaned = toParam.replace(/\D/g, '');
-          if (cleaned.length >= 7) {
+          let cleaned = toParam.replace(/\D/g, '');
+          if (cleaned.length === 8) {
+            cleaned = '503' + cleaned;
+          }
+          if (cleaned.length >= 8) {
             urlPreconfiguredPhone = cleaned;
             
             const seniorCard = document.getElementById('senior-card');
@@ -618,19 +621,13 @@
 
         const lat = coords.latitude.toFixed(6);
         const lon = coords.longitude.toFixed(6);
-        const isNetwork = Boolean(coords.isNetworkFallback);
         const accuracy = Math.round(coords.accuracy || 0);
 
         displayLatitude.textContent = lat;
         displayLongitude.textContent = lon;
         
-        if (isNetwork) {
-          accuracyBadge.textContent = 'Ubicación por Red';
-          accuracyBadge.className = 'text-[11px] font-semibold px-2.5 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-300';
-        } else {
-          accuracyBadge.textContent = `Precisión: ±${accuracy} m`;
-          accuracyBadge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300';
-        }
+        accuracyBadge.textContent = `Precisión GPS: ±${accuracy} m`;
+        accuracyBadge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300';
 
         const now = new Date();
         timestampDisplay.textContent = `Hora: ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
@@ -638,21 +635,13 @@
         const mapsUrl = `https://maps.google.com/?q=${lat},${lon}`;
         googleMapsLink.href = mapsUrl;
 
-        // Construcción del mensaje para WhatsApp
+        // Construcción del mensaje para WhatsApp con coordenadas exactas
         const fullNumber = getSanitizedFullNumber();
-        const headerText = isNetwork 
-          ? `📍 *Mi ubicación aproximada (por red):*`
-          : `📍 *Mi ubicación actual:*`;
-
-        const detailsText = isNetwork
-          ? `• Zona: ${coords.cityName || 'El Salvador'}`
-          : `• Precisión: ±${accuracy} m`;
-
         const message = 
-`${headerText}
+`📍 *Mi ubicación GPS exacta:*
 • Latitud: ${lat}
 • Longitud: ${lon}
-${detailsText}
+• Precisión GPS: ±${accuracy} metros
 
 🗺️ *Ver en Google Maps:*
 ${mapsUrl}`;
@@ -668,12 +657,33 @@ ${mapsUrl}`;
 
       function triggerWhatsApp(url) {
         btnText.textContent = '¡Listo! Abriendo WhatsApp...';
-        // Redirige directamente en la misma ventana para evitar el bloqueador de popups en teléfonos móviles
+        // Redirige directamente en la misma ventana para abrir WhatsApp en 1 toque
         window.location.href = url;
       }
 
-      // 7. Manejo de Geolocalización y Respaldo Inteligente Sin Permisos
-      async function handleGetLocation() {
+      // Variables de control de geolocalización satelital de alta precisión
+      let activeWatchId = null;
+      let gpsTotalTimeout = null;
+      let gpsSettleTimeout = null;
+      let bestObservedCoords = null;
+
+      function clearGpsWatchers() {
+        if (activeWatchId !== null && 'geolocation' in navigator) {
+          navigator.geolocation.clearWatch(activeWatchId);
+          activeWatchId = null;
+        }
+        if (gpsTotalTimeout) {
+          clearTimeout(gpsTotalTimeout);
+          gpsTotalTimeout = null;
+        }
+        if (gpsSettleTimeout) {
+          clearTimeout(gpsSettleTimeout);
+          gpsSettleTimeout = null;
+        }
+      }
+
+      // 7. Manejo de Geolocalización Satelital de Alta Precisión (GPS Exacto)
+      function handleGetLocation() {
         const fullNumber = getSanitizedFullNumber();
         if (!isAnyChatMode && !urlPreconfiguredPhone && !fullNumber) {
           showError('Número requerido', 'Por favor, ingresa un número de teléfono o pulsa "¿Elegir chat/grupo al enviar?"');
@@ -681,127 +691,117 @@ ${mapsUrl}`;
           return;
         }
 
-        setLoading(true, 'Buscando tu ubicación...');
-
-        // Si el navegador no soporta geolocalización, usamos de inmediato el respaldo sin permisos
         if (!('geolocation' in navigator)) {
-          console.info('Geolocalización no soportada, pasando a respaldo sin permisos...');
-          await fallbackToIpLocation();
+          showError(
+            'GPS no disponible',
+            'Tu navegador no soporta la función de ubicación GPS. Por favor abre este enlace en Google Chrome o Safari.'
+          );
           return;
         }
 
-        // Si ya sabemos que el permiso fue denegado previamente, vamos directo al respaldo sin permisos
-        if (navigator.permissions && navigator.permissions.query) {
-          try {
-            const status = await navigator.permissions.query({ name: 'geolocation' });
-            if (status && status.state === 'denied') {
-              console.info('Permiso previamente denegado, usando respaldo por red sin permisos...');
-              await fallbackToIpLocation();
-              return;
-            }
-          } catch (e) {
-            // Continuar con flujo normal
-          }
+        clearGpsWatchers();
+        bestObservedCoords = null;
+
+        setLoading(true, 'Conectando con satélites GPS...');
+        const loadingSubtitle = document.querySelector('#loading-state p');
+        if (loadingSubtitle) {
+          loadingSubtitle.textContent = 'Buscando satélites de alta precisión (hasta 1 min)...';
         }
 
-        let hasResolved = false;
-
-        // Temporizador de seguridad: si en 10s no hay respuesta (o el usuario no tocó permitir), usamos respaldo por red
-        const timerFallback = setTimeout(async () => {
-          if (!hasResolved) {
-            hasResolved = true;
-            console.info('GPS demoró, activando respaldo automático por red sin permisos...');
-            await fallbackToIpLocation();
+        // Tiempo de espera total: 60 segundos (1 minuto) para adquirir señal satelital real
+        gpsTotalTimeout = setTimeout(() => {
+          if (bestObservedCoords) {
+            clearGpsWatchers();
+            showSuccess(bestObservedCoords);
+          } else {
+            clearGpsWatchers();
+            showError(
+              'Tiempo de espera agotado (1 min)',
+              'No se pudo conectar con los satélites GPS. Asegúrate de tener la "Ubicación / GPS" activada en tu teléfono y prueba al aire libre o cerca de una ventana.'
+            );
           }
-        }, 10000);
+        }, 60000);
 
         const geoOptions = {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
+          enableHighAccuracy: true, // EXCLUSIVAMENTE GPS SATELITAL REAL
+          timeout: 60000,          // 1 minuto de límite
+          maximumAge: 0            // NUNCA datos en caché o estimaciones
         };
 
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            if (hasResolved) return;
-            hasResolved = true;
-            clearTimeout(timerFallback);
-            showSuccess(pos.coords);
-          },
-          async (err) => {
-            if (hasResolved) return;
-            hasResolved = true;
-            clearTimeout(timerFallback);
-            console.warn('GPS falló o fue denegado, usando respaldo por red:', err.message);
-            // EN LUGAR DE MOSTRAR ERROR, SE OBTIENE LA UBICACIÓN POR RED AUTOMÁTICAMENTE
-            await fallbackToIpLocation();
-          },
-          geoOptions
-        );
-      }
-
-      // Respaldo de Ubicación por Red / IP (0 permisos necesarios)
-      async function fallbackToIpLocation() {
-        setLoading(true, 'Obteniendo por red...');
-
         try {
-          // Servicio 1: GeoJS
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 4000);
-          const res = await fetch('https://get.geojs.io/v1/ip/geo.json', { signal: controller.signal });
-          clearTimeout(timeoutId);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.latitude && data.longitude) {
-              showSuccess({
-                latitude: parseFloat(data.latitude),
-                longitude: parseFloat(data.longitude),
-                accuracy: 1500,
-                isNetworkFallback: true,
-                cityName: data.city || data.region || 'El Salvador'
-              });
-              return;
-            }
-          }
-        } catch (e1) {
-          console.warn('GeoJS error, probando servicio secundario...', e1);
-        }
+          activeWatchId = navigator.geolocation.watchPosition(
+            (pos) => {
+              const coords = pos.coords;
+              const accuracy = coords.accuracy;
 
-        try {
-          // Servicio 2: FreeIPAPI
-          const controller2 = new AbortController();
-          const timeoutId2 = setTimeout(() => controller2.abort(), 4000);
-          const res2 = await fetch('https://freeipapi.com/api/json', { signal: controller2.signal });
-          clearTimeout(timeoutId2);
-          if (res2.ok) {
-            const data2 = await res2.json();
-            if (data2.latitude && data2.longitude) {
-              showSuccess({
-                latitude: parseFloat(data2.latitude),
-                longitude: parseFloat(data2.longitude),
-                accuracy: 2500,
-                isNetworkFallback: true,
-                cityName: data2.cityName || 'El Salvador'
-              });
-              return;
-            }
-          }
-        } catch (e2) {
-          console.warn('FreeIPAPI error:', e2);
-        }
+              // Guardamos la mejor lectura hasta ahora
+              if (!bestObservedCoords || accuracy < bestObservedCoords.accuracy) {
+                bestObservedCoords = coords;
+              }
 
-        // Si ningún servicio de red responde, abrimos WhatsApp directamente al chat
-        setLoading(false);
-        openDirectWhatsAppChatFallback();
+              if (loadingSubtitle) {
+                loadingSubtitle.textContent = `Satélites conectados (±${Math.round(accuracy)} m). Calibrando exactitud...`;
+              }
+
+              // Si la precisión es excelente (<= 15 metros, típico de satélite GPS real), enviamos de inmediato
+              if (accuracy <= 15) {
+                clearGpsWatchers();
+                showSuccess(coords);
+                return;
+              }
+
+              // Si la precisión es muy buena (<= 30 metros), damos 3 segundos para ver si afina aún más
+              if (accuracy <= 30 && !gpsSettleTimeout) {
+                gpsSettleTimeout = setTimeout(() => {
+                  if (bestObservedCoords) {
+                    clearGpsWatchers();
+                    showSuccess(bestObservedCoords);
+                  }
+                }, 3000);
+              }
+            },
+            (err) => {
+              // Si ya tenemos una coordenada capturada válida, la usamos
+              if (bestObservedCoords) {
+                clearGpsWatchers();
+                showSuccess(bestObservedCoords);
+                return;
+              }
+
+              clearGpsWatchers();
+              console.warn('Error de GPS:', err);
+
+              let title = 'Ubicación GPS no disponible';
+              let message = 'No se pudo obtener la posición satelital.';
+
+              if (err.code === 1) { // PERMISSION_DENIED
+                title = 'Permiso de ubicación necesario';
+                message = 'Para enviar tu ubicación exacta, debes presionar "PERMITIR" cuando tu teléfono pregunte por la ubicación. Si lo bloqueaste por error, habilítalo en los ajustes del navegador.';
+              } else if (err.code === 2) { // POSITION_UNAVAILABLE
+                title = 'Señal GPS no disponible';
+                message = 'Asegúrate de que la Ubicación / GPS de tu teléfono esté encendida en los ajustes o barra de notificaciones.';
+              } else if (err.code === 3) { // TIMEOUT
+                title = 'Tiempo de espera agotado';
+                message = 'Tardó más de 1 minuto en conectar con los satélites. Por favor reintenta al aire libre o con cielo despejado.';
+              }
+
+              showError(title, message);
+            },
+            geoOptions
+          );
+        } catch (e) {
+          clearGpsWatchers();
+          showError('Error de GPS', 'Ocurrió un error al activar el GPS: ' + (e.message || e));
+        }
       }
 
       function openDirectWhatsAppChatFallback() {
         const fullNumber = getSanitizedFullNumber();
-        const msg = encodeURIComponent("¡Hola! Te contacto para compartirte mi ubicación. (Por favor pídeme que toque el clip 📎 o + en este chat y elija 'Ubicación')");
+        const msg = encodeURIComponent("¡Hola! Te escribo para compartirte mi ubicación. (Toca el icono de clip 📎 o '+' en este chat de WhatsApp y selecciona 'Ubicación')");
         const waUrl = fullNumber 
           ? `https://wa.me/${fullNumber}?text=${msg}`
           : `https://wa.me/?text=${msg}`;
-        triggerWhatsApp(waUrl);
+        window.location.href = waUrl;
       }
 
       // 8. Copiar coordenadas

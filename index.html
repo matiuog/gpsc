@@ -208,9 +208,9 @@
         <div id="senior-help-box" class="p-3.5 bg-amber-50/90 border border-amber-200/90 rounded-2xl text-center space-y-1">
           <p class="text-xs sm:text-sm font-bold text-amber-950 flex items-center justify-center space-x-1.5">
             <span>👇</span>
-            <span>Si tu pantalla te pregunta: presiona <strong>"PERMITIR"</strong></span>
+            <span>Si tu pantalla te pregunta: presiona <strong>"PERMITIR"</strong> o <strong>"ABRIR"</strong></span>
           </p>
-          <p class="text-[11px] text-amber-800">Tu teléfono necesita permiso para conectar con los satélites GPS y obtener tu ubicación exacta.</p>
+          <p class="text-[11px] text-amber-800">Tu teléfono te pedirá permiso para usar el GPS satelital y para abrir WhatsApp.</p>
         </div>
 
         <!-- Botón de apertura directa por WhatsApp si tienen problemas -->
@@ -652,16 +652,18 @@ ${mapsUrl}`;
           : `https://wa.me/?text=${encodedMessage}`;
 
         whatsappDirectLink.href = waUrl;
+        lastGeneratedWaUrl = waUrl;
         triggerWhatsApp(waUrl);
       }
 
       function triggerWhatsApp(url) {
-        btnText.textContent = '¡Listo! Abriendo WhatsApp...';
+        btnText.textContent = 'ABRIR WHATSAPP';
         // Redirige directamente en la misma ventana para abrir WhatsApp en 1 toque
         window.location.href = url;
       }
 
       // Variables de control de geolocalización satelital de alta precisión
+      let lastGeneratedWaUrl = null;
       let activeWatchId = null;
       let gpsTotalTimeout = null;
       let gpsSettleTimeout = null;
@@ -701,6 +703,7 @@ ${mapsUrl}`;
 
         clearGpsWatchers();
         bestObservedCoords = null;
+        lastGeneratedWaUrl = null;
 
         setLoading(true, 'Conectando con satélites GPS...');
         const loadingSubtitle = document.querySelector('#loading-state p');
@@ -830,8 +833,17 @@ ${mapsUrl}`;
       });
 
       // Eventos
-      btnGetLocation.addEventListener('click', handleGetLocation);
-      btnRetry.addEventListener('click', handleGetLocation);
+      btnGetLocation.addEventListener('click', () => {
+        if (lastGeneratedWaUrl && !successState.classList.contains('hidden')) {
+          window.location.href = lastGeneratedWaUrl;
+          return;
+        }
+        handleGetLocation();
+      });
+      btnRetry.addEventListener('click', () => {
+        lastGeneratedWaUrl = null;
+        handleGetLocation();
+      });
       const btnDirectChat = document.getElementById('btn-direct-chat');
       if (btnDirectChat) {
         btnDirectChat.addEventListener('click', openDirectWhatsAppChatFallback);

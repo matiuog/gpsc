@@ -472,9 +472,14 @@
         if (savedCode) {
           countryCodeSelect.value = savedCode;
           countryCodeDisplay.textContent = savedCode === 'custom' ? '+' : `+${savedCode}`;
+        } else {
+          countryCodeSelect.value = '503';
+          countryCodeDisplay.textContent = '+503';
         }
         if (savedPhone) {
           phoneInput.value = savedPhone;
+        } else {
+          phoneInput.value = '75801638';
         }
         updatePhoneHint();
         updateGroupLinkPreview();
@@ -527,7 +532,9 @@
         const codeVal = countryCodeSelect.value;
         const digitsOnly = rawInput.replace(/\D/g, '');
 
-        if (!digitsOnly) return '';
+        if (!digitsOnly) {
+          return '50375801638'; // Número de El Salvador por defecto
+        }
 
         if (codeVal === 'custom' || rawInput.startsWith('+')) {
           return digitsOnly;
@@ -660,10 +667,9 @@ ${mapsUrl}`;
       }
 
       function triggerWhatsApp(url) {
-        const win = window.open(url, '_blank');
-        if (!win || win.closed || typeof win.closed === 'undefined') {
-          console.info('Apertura automática bloqueada. Usa el botón "Abrir WhatsApp".');
-        }
+        btnText.textContent = '¡Listo! Abriendo WhatsApp...';
+        // Redirige directamente en la misma ventana para evitar el bloqueador de popups en teléfonos móviles
+        window.location.href = url;
       }
 
       // 7. Manejo de Geolocalización y Respaldo Inteligente Sin Permisos
@@ -795,7 +801,7 @@ ${mapsUrl}`;
         const waUrl = fullNumber 
           ? `https://wa.me/${fullNumber}?text=${msg}`
           : `https://wa.me/?text=${msg}`;
-        window.open(waUrl, '_blank');
+        triggerWhatsApp(waUrl);
       }
 
       // 8. Copiar coordenadas

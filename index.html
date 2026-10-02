@@ -201,7 +201,7 @@
           </div>
           <div>
             <h3 class="text-sm font-semibold text-slate-800">Obteniendo coordenadas GPS...</h3>
-            <p class="text-xs text-slate-500 mt-1">Conectando con satélites de alta precisión</p>
+            <p class="text-xs text-slate-500 mt-1">Buscando satélites de alta precisión (puede tardar hasta 1 min)...</p>
           </div>
           <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
             <div class="bg-emerald-500 h-1.5 rounded-full animate-pulse-slow w-3/4 mx-auto"></div>
@@ -648,7 +648,7 @@ ${mapsUrl}`;
 
         const geoOptions = {
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: 60000, // 1 minuto (60,000 ms)
           maximumAge: 0
         };
 
@@ -673,8 +673,8 @@ ${mapsUrl}`;
             msg = 'No se pudo determinar tu posición. Verifica que la ubicación/GPS de tu teléfono esté activada.';
             break;
           case error.TIMEOUT:
-            title = 'Tiempo agotado (10s)';
-            msg = 'El GPS tardó más de 10 segundos en responder. Acércate a una ventana o sal a cielo abierto y reintenta.';
+            title = 'Tiempo agotado (1 min)';
+            msg = 'El GPS tardó más de 1 minuto en responder. Si estás en interiores, acércate a una ventana o sal a cielo abierto y reintenta.';
             break;
           default:
             title = 'Error inesperado';

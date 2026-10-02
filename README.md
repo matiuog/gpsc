@@ -13,7 +13,7 @@ Especialmente adaptada y optimizada para **adultos mayores y personas con poca e
 
 ---
 
-## ✨ Características Principales
+##  Características Principales
 
 * 📡 **GPS Satelital Real:** Utiliza `navigator.geolocation.watchPosition` con `enableHighAccuracy: true` y `maximumAge: 0` para obtener la posición satelital exacta (precisión de 5 a 15 metros), eliminando estimaciones erróneas por IP.
 * ⚡ **Redirección en 1 Toque:** Al pulsar el botón, en cuanto se fija la posición, redirige automáticamente a WhatsApp con el mensaje y el pin de Google Maps listo para enviar.

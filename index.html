@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#059669">
+  
+  <!-- SEO & WhatsApp Link Preview (Open Graph) -->
+  <title>📍 Compartir mi Ubicación GPS en 1 Clic</title>
+  <meta name="description" content="Obtén tus coordenadas GPS de alta precisión con un solo toque y compártelas de inmediato por WhatsApp.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="📍 Comparte tu Ubicación GPS en 1 Clic">
+  <meta property="og:description" content="Toca aquí para obtener tus coordenadas GPS de alta precisión y enviarlas directamente por WhatsApp.">
+  <meta property="og:site_name" content="GPS a WhatsApp">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="📍 Comparte tu Ubicación GPS">
+  <meta name="twitter:description" content="Obtén tus coordenadas GPS de alta precisión y compártelas por WhatsApp.">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            whatsapp: {
+              DEFAULT: '#25D366',
+              dark: '#128C7E',
+              darker: '#075E54',
+              light: '#DCF8C6'
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes ripple {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 0.3; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .radar-pulse {
+      animation: ripple 2s infinite ease-in-out;
+    }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col justify-between text-slate-800 antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Contenedor Principal Centrado (Mobile-First) -->
+  <main class="flex-grow flex items-center justify-center p-3 sm:p-6 md:p-8">
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-slate-200/70 border border-slate-100 overflow-hidden transition-all duration-300">
+      
+      <!-- Encabezado con degradado y branding -->
+      <div class="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 px-6 pt-7 pb-6 text-white relative">
+        <div class="absolute -right-4 -bottom-6 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center space-x-3 mb-2">
+          <div class="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner shrink-0">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold tracking-tight">GPS a WhatsApp</h1>
+            <p class="text-xs text-emerald-100/90 font-medium">Comparte tu ubicación exacta en 1 toque</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-5 sm:p-6 space-y-5">
+
+        <!-- Banner de Solicitud de Grupo (Se activa si el enlace trae ?to=NUMERO) -->
+        <div id="group-request-banner" class="hidden p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 text-xs flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-xl bg-emerald-200/70 flex items-center justify-center shrink-0 text-emerald-700">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <p class="font-bold text-[13px]">📍 Solicitud de ubicación</p>
+            <p class="text-emerald-700 text-xs mt-0.5" id="group-request-text">Pulsa el botón abajo para enviar tus coordenadas a este destinatario.</p>
+          </div>
+        </div>
+
+        <!-- Advertencia de Contexto Seguro (HTTPS / Localhost) -->
+        <div id="insecure-context-alert" class="hidden p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-xs flex items-start space-x-2.5">
+          <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
+          <div>
+            <p class="font-semibold">Requiere conexión segura (HTTPS)</p>
+            <p class="mt-0.5 text-amber-700">La geolocalización requiere HTTPS o <span class="font-mono bg-amber-100 px-1 rounded">localhost</span> para acceder al GPS del dispositivo.</p>
+          </div>
+        </div>
+
+        <!-- Formulario de Destinatario -->
+        <div id="phone-container" class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label for="phone-number" class="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Enviar a WhatsApp
+            </label>
+            <button id="btn-toggle-mode" type="button" class="text-[11px] text-emerald-700 hover:text-emerald-800 font-medium underline cursor-pointer">
+              ¿Elegir chat/grupo al enviar?
+            </button>
+          </div>
+
+          <!-- Selector de Modo: Número Específico o Elegir en WhatsApp -->
+          <div id="phone-input-wrapper" class="relative flex rounded-2xl border border-slate-200 bg-slate-50/70 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500 focus-within:bg-white transition-all shadow-sm">
+            <!-- Selector de Código de País -->
+            <div class="relative flex items-center border-r border-slate-200 bg-slate-100/70 rounded-l-2xl px-3 hover:bg-slate-200/60 transition-colors cursor-pointer">
+              <span class="text-xs font-semibold text-slate-700 select-none mr-1" id="country-code-display">+34</span>
+              <select id="country-code-select" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" aria-label="Código de país">
+                <option value="34" selected>España (+34)</option>
+                <option value="52">México (+52)</option>
+                <option value="54">Argentina (+54)</option>
+                <option value="57">Colombia (+57)</option>
+                <option value="56">Chile (+56)</option>
+                <option value="51">Perú (+51)</option>
+                <option value="1">EE.UU. / Canadá (+1)</option>
+                <option value="593">Ecuador (+593)</option>
+                <option value="502">Guatemala (+502)</option>
+                <option value="506">Costa Rica (+506)</option>
+                <option value="598">Uruguay (+598)</option>
+                <option value="58">Venezuela (+58)</option>
+                <option value="custom">Manual (+)</option>
+              </select>
+              <svg class="w-3.5 h-3.5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
+            
+            <!-- Entrada de teléfono -->
+            <input 
+              type="tel" 
+              id="phone-number" 
+              name="phone"
+              inputmode="numeric" 
+              placeholder="Ej: 612 345 678"
+              class="w-full bg-transparent px-3.5 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none font-medium"
+              autocomplete="tel"
+            >
+          </div>
+
+          <!-- Mensaje en modo "Cualquier chat o grupo" -->
+          <div id="any-chat-badge" class="hidden p-3 bg-slate-100 rounded-2xl border border-slate-200 text-xs text-slate-600 flex items-center justify-between">
+            <span class="flex items-center space-x-2">
+              <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"></path>
+              </svg>
+              <span>Se abrirá el selector de WhatsApp para elegir contacto o grupo.</span>
+            </span>
+          </div>
+
+          <p id="phone-hint-row" class="text-[11px] text-slate-400 flex items-center justify-between">
+            <span>Guarda automáticamente tu preferencia.</span>
+            <span id="phone-format-hint" class="font-mono text-emerald-600 font-semibold"></span>
+          </p>
+        </div>
+
+        <!-- Botón Principal Llamativo (1 Clic) -->
+        <button 
+          id="btn-get-location"
+          type="button"
+          class="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:scale-[0.98] transition-all duration-200 py-4 px-6 text-white font-bold text-base shadow-lg shadow-emerald-500/25 flex items-center justify-center space-x-3 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed disabled:transform-none"
+        >
+          <!-- Efecto de brillo hover -->
+          <div class="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000"></div>
+
+          <!-- Icono de WhatsApp -->
+          <svg class="w-6 h-6 shrink-0 fill-current" viewBox="0 0 24 24">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+          </svg>
+
+          <span id="btn-text">Compartir mi ubicación</span>
+
+          <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+          </svg>
+        </button>
+
+        <!-- Indicador de Carga con Radar animado -->
+        <div id="loading-state" class="hidden py-6 text-center space-y-4">
+          <div class="relative w-16 h-16 mx-auto flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full bg-emerald-400/30 radar-pulse"></div>
+            <div class="w-12 h-12 rounded-full border-4 border-emerald-200 border-t-emerald-600 animate-spin flex items-center justify-center"></div>
+            <div class="absolute w-3 h-3 bg-emerald-600 rounded-full"></div>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold text-slate-800">Obteniendo coordenadas GPS...</h3>
+            <p class="text-xs text-slate-500 mt-1">Conectando con satélites de alta precisión</p>
+          </div>
+          <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-emerald-500 h-1.5 rounded-full animate-pulse-slow w-3/4 mx-auto"></div>
+          </div>
+        </div>
+
+        <!-- Indicador de Error amigable -->
+        <div id="error-state" class="hidden p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 space-y-2">
+          <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-xl bg-rose-100 flex items-center justify-center shrink-0 mt-0.5">
+              <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-rose-900" id="error-title">Error al obtener ubicación</h4>
+              <p class="text-xs text-rose-700 mt-0.5" id="error-message">Ha ocurrido un problema al consultar la posición GPS.</p>
+            </div>
+          </div>
+          <div id="error-action" class="pt-2 border-t border-rose-200/60 text-right">
+            <button id="btn-retry" class="text-xs font-semibold text-rose-700 hover:text-rose-900 underline cursor-pointer">
+              Reintentar
+            </button>
+          </div>
+        </div>
+
+        <!-- Estado de Éxito / Coordenadas Obtenidas -->
+        <div id="success-state" class="hidden space-y-4">
+          <div class="p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span>Coordenadas Obtenidas</span>
+              </span>
+              <span id="accuracy-badge" class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-white border border-emerald-200 text-slate-600 shadow-2xs">
+                ±0 m
+              </span>
+            </div>
+
+            <!-- Grilla de coordenadas -->
+            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+              <div class="bg-white p-2.5 rounded-xl border border-slate-100 shadow-2xs">
+                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Latitud</span>
+                <span id="display-latitude" class="font-mono font-bold text-slate-800 text-sm">--</span>
+              </div>
+              <div class="bg-white p-2.5 rounded-xl border border-slate-100 shadow-2xs">
+                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Longitud</span>
+                <span id="display-longitude" class="font-mono font-bold text-slate-800 text-sm">--</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-emerald-200/50">
+              <span id="timestamp-display">Hora: --:--:--</span>
+              <button id="btn-copy-coords" class="text-emerald-700 hover:text-emerald-900 font-medium inline-flex items-center space-x-1 cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                <span id="copy-btn-text">Copiar</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Acciones secundarias directas -->
+          <div class="grid grid-cols-2 gap-2">
+            <a 
+              id="google-maps-link" 
+              href="#" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="flex items-center justify-center space-x-2 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition-colors border border-slate-200"
+            >
+              <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+              </svg>
+              <span>Ver en Maps</span>
+            </a>
+
+            <a 
+              id="whatsapp-direct-link" 
+              href="#" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="flex items-center justify-center space-x-2 py-2.5 px-3 bg-whatsapp/15 hover:bg-whatsapp/25 text-emerald-900 text-xs font-semibold rounded-xl transition-colors border border-emerald-200"
+            >
+              <svg class="w-4 h-4 text-whatsapp-dark shrink-0 fill-current" viewBox="0 0 24 24">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+              </svg>
+              <span>Abrir WhatsApp</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Herramienta de Administrador: Generar y Copiar Enlace para Compartir en el Grupo -->
+        <div class="pt-2 border-t border-slate-100">
+          <details class="group/details">
+            <summary class="text-[12px] font-semibold text-slate-500 hover:text-slate-800 cursor-pointer list-none flex items-center justify-between py-1">
+              <span class="flex items-center space-x-1.5">
+                <svg class="w-3.5 h-3.5 text-teal-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                </svg>
+                <span>Generar enlace para enviar al grupo</span>
+              </span>
+              <svg class="w-4 h-4 text-slate-400 group-open/details:rotate-180 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </summary>
+
+            <div class="pt-3 pb-1 text-xs text-slate-600 space-y-2.5">
+              <p class="text-[11px] text-slate-500">
+                Crea un enlace con tu número preconfigurado para que las personas del grupo solo tengan que entrar y pulsar <strong>un clic</strong> para enviarte sus coordenadas:
+              </p>
+              <button 
+                id="btn-copy-group-link" 
+                type="button" 
+                class="w-full py-2.5 px-3 bg-teal-50 hover:bg-teal-100 text-teal-800 rounded-xl font-semibold border border-teal-200 transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+              >
+                <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                </svg>
+                <span id="group-link-btn-text">Copiar Enlace para el Grupo</span>
+              </button>
+              <p id="group-link-preview" class="text-[10px] font-mono text-slate-400 truncate text-center"></p>
+            </div>
+          </details>
+        </div>
+
+      </div>
+
+      <!-- Footer informativo -->
+      <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+        <span class="flex items-center space-x-1">
+          <svg class="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd"></path>
+          </svg>
+          <span>Geolocalización privada en tu dispositivo</span>
+        </span>
+        <span class="font-mono text-[10px] bg-slate-200/60 px-1.5 py-0.5 rounded text-slate-500">Vercel Ready</span>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Lógica de la Aplicación -->
+  <script>
+    (function() {
+      // Elementos del DOM
+      const btnGetLocation = document.getElementById('btn-get-location');
+      const btnText = document.getElementById('btn-text');
+      const phoneInput = document.getElementById('phone-number');
+      const countryCodeSelect = document.getElementById('country-code-select');
+      const countryCodeDisplay = document.getElementById('country-code-display');
+      const phoneFormatHint = document.getElementById('phone-format-hint');
+      const phoneInputWrapper = document.getElementById('phone-input-wrapper');
+      const anyChatBadge = document.getElementById('any-chat-badge');
+      const phoneHintRow = document.getElementById('phone-hint-row');
+      const btnToggleMode = document.getElementById('btn-toggle-mode');
+      
+      const groupRequestBanner = document.getElementById('group-request-banner');
+      const groupRequestText = document.getElementById('group-request-text');
+      const btnCopyGroupLink = document.getElementById('btn-copy-group-link');
+      const groupLinkBtnText = document.getElementById('group-link-btn-text');
+      const groupLinkPreview = document.getElementById('group-link-preview');
+
+      const loadingState = document.getElementById('loading-state');
+      const errorState = document.getElementById('error-state');
+      const errorTitle = document.getElementById('error-title');
+      const errorMessage = document.getElementById('error-message');
+      const btnRetry = document.getElementById('btn-retry');
+      
+      const successState = document.getElementById('success-state');
+      const displayLatitude = document.getElementById('display-latitude');
+      const displayLongitude = document.getElementById('display-longitude');
+      const accuracyBadge = document.getElementById('accuracy-badge');
+      const timestampDisplay = document.getElementById('timestamp-display');
+      const btnCopyCoords = document.getElementById('btn-copy-coords');
+      const copyBtnText = document.getElementById('copy-btn-text');
+      const googleMapsLink = document.getElementById('google-maps-link');
+      const whatsappDirectLink = document.getElementById('whatsapp-direct-link');
+      const insecureAlert = document.getElementById('insecure-context-alert');
+
+      // Claves de Almacenamiento Local
+      const STORAGE_PHONE_KEY = 'gps_whatsapp_phone';
+      const STORAGE_CODE_KEY = 'gps_whatsapp_code';
+      const STORAGE_MODE_KEY = 'gps_whatsapp_mode'; // 'specific' | 'any'
+
+      let isAnyChatMode = false;
+      let urlPreconfiguredPhone = null;
+
+      // 1. Detección de Parámetros de URL (?to=52123... o ?phone=...)
+      function checkUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        const toParam = params.get('to') || params.get('phone') || params.get('dest') || params.get('tel');
+
+        if (toParam) {
+          const cleaned = toParam.replace(/\D/g, '');
+          if (cleaned.length >= 7) {
+            urlPreconfiguredPhone = cleaned;
+            groupRequestBanner.classList.remove('hidden');
+            groupRequestText.textContent = `Pulsa el botón para enviar tus coordenadas directamente a: +${cleaned}`;
+            
+            // Ocultar formulario o prellenarlo en modo lectura
+            phoneInput.value = cleaned;
+            countryCodeSelect.value = 'custom';
+            countryCodeDisplay.textContent = '+';
+            btnToggleMode.classList.add('hidden');
+            phoneInputWrapper.classList.add('opacity-75', 'pointer-events-none');
+            phoneFormatHint.textContent = `Destino fijado: +${cleaned}`;
+            return true;
+          }
+        }
+        return false;
+      }
+
+      // 2. Comprobar contexto seguro (HTTPS o localhost)
+      function checkSecurityContext() {
+        const isLocalhost = Boolean(
+          window.location.hostname === 'localhost' ||
+          window.location.hostname === '[::1]' ||
+          window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
+        );
+        const isSecure = window.isSecureContext || isLocalhost;
+        if (!isSecure && location.protocol !== 'https:') {
+          insecureAlert.classList.remove('hidden');
+        }
+      }
+
+      // 3. Restaurar preferencias
+      function loadSavedPreferences() {
+        if (urlPreconfiguredPhone) return;
+
+        const savedMode = localStorage.getItem(STORAGE_MODE_KEY);
+        if (savedMode === 'any') {
+          setAnyChatMode(true);
+        }
+
+        const savedPhone = localStorage.getItem(STORAGE_PHONE_KEY);
+        const savedCode = localStorage.getItem(STORAGE_CODE_KEY);
+
+        if (savedCode) {
+          countryCodeSelect.value = savedCode;
+          countryCodeDisplay.textContent = savedCode === 'custom' ? '+' : `+${savedCode}`;
+        }
+        if (savedPhone) {
+          phoneInput.value = savedPhone;
+        }
+        updatePhoneHint();
+        updateGroupLinkPreview();
+      }
+
+      function setAnyChatMode(active) {
+        isAnyChatMode = active;
+        localStorage.setItem(STORAGE_MODE_KEY, active ? 'any' : 'specific');
+        if (active) {
+          phoneInputWrapper.classList.add('hidden');
+          phoneHintRow.classList.add('hidden');
+          anyChatBadge.classList.remove('hidden');
+          btnToggleMode.textContent = 'Indicar número específico';
+        } else {
+          phoneInputWrapper.classList.remove('hidden');
+          phoneHintRow.classList.remove('hidden');
+          anyChatBadge.classList.add('hidden');
+          btnToggleMode.textContent = '¿Elegir chat/grupo al enviar?';
+        }
+      }
+
+      btnToggleMode.addEventListener('click', () => {
+        setAnyChatMode(!isAnyChatMode);
+      });
+
+      countryCodeSelect.addEventListener('change', () => {
+        const val = countryCodeSelect.value;
+        countryCodeDisplay.textContent = val === 'custom' ? '+' : `+${val}`;
+        localStorage.setItem(STORAGE_CODE_KEY, val);
+        updatePhoneHint();
+        updateGroupLinkPreview();
+      });
+
+      phoneInput.addEventListener('input', () => {
+        localStorage.setItem(STORAGE_PHONE_KEY, phoneInput.value.trim());
+        updatePhoneHint();
+        updateGroupLinkPreview();
+      });
+
+      // 4. Sanitización del número internacional
+      function getSanitizedFullNumber() {
+        if (urlPreconfiguredPhone) {
+          return urlPreconfiguredPhone;
+        }
+        if (isAnyChatMode) {
+          return ''; // Modo sin número: wa.me/?text=... abre selector de chat/grupo en WhatsApp
+        }
+
+        const rawInput = phoneInput.value.trim();
+        const codeVal = countryCodeSelect.value;
+        const digitsOnly = rawInput.replace(/\D/g, '');
+
+        if (!digitsOnly) return '';
+
+        if (codeVal === 'custom' || rawInput.startsWith('+')) {
+          return digitsOnly;
+        }
+
+        if (digitsOnly.startsWith(codeVal)) {
+          return digitsOnly;
+        }
+
+        return `${codeVal}${digitsOnly}`;
+      }
+
+      function updatePhoneHint() {
+        if (urlPreconfiguredPhone || isAnyChatMode) return;
+        const full = getSanitizedFullNumber();
+        phoneFormatHint.textContent = full ? `Destino: +${full}` : '';
+      }
+
+      function updateGroupLinkPreview() {
+        const full = getSanitizedFullNumber();
+        const base = window.location.origin + window.location.pathname;
+        const link = full ? `${base}?to=${full}` : `${base}`;
+        if (groupLinkPreview) {
+          groupLinkPreview.textContent = link;
+        }
+      }
+
+      // 5. Copiar enlace para el grupo
+      btnCopyGroupLink.addEventListener('click', async () => {
+        const full = getSanitizedFullNumber();
+        const base = window.location.origin + window.location.pathname;
+        const link = full ? `${base}?to=${full}` : base;
+
+        try {
+          await navigator.clipboard.writeText(link);
+          groupLinkBtnText.textContent = '¡Enlace Copiado al Portapapeles!';
+          setTimeout(() => {
+            groupLinkBtnText.textContent = 'Copiar Enlace para el Grupo';
+          }, 2500);
+        } catch (err) {
+          const temp = document.createElement('input');
+          temp.value = link;
+          document.body.appendChild(temp);
+          temp.select();
+          document.execCommand('copy');
+          document.body.removeChild(temp);
+          groupLinkBtnText.textContent = '¡Enlace Copiado!';
+          setTimeout(() => {
+            groupLinkBtnText.textContent = 'Copiar Enlace para el Grupo';
+          }, 2500);
+        }
+      });
+
+      // 6. UI Loading / Error / Success
+      function setLoading(isLoading) {
+        if (isLoading) {
+          loadingState.classList.remove('hidden');
+          errorState.classList.add('hidden');
+          successState.classList.add('hidden');
+          btnGetLocation.disabled = true;
+          btnText.textContent = 'Obteniendo GPS...';
+        } else {
+          loadingState.classList.add('hidden');
+          btnGetLocation.disabled = false;
+          btnText.textContent = 'Compartir mi ubicación';
+        }
+      }
+
+      function showError(title, message) {
+        setLoading(false);
+        errorTitle.textContent = title;
+        errorMessage.textContent = message;
+        errorState.classList.remove('hidden');
+        successState.classList.add('hidden');
+      }
+
+      function showSuccess(coords) {
+        setLoading(false);
+        errorState.classList.add('hidden');
+        successState.classList.remove('hidden');
+
+        const lat = coords.latitude.toFixed(6);
+        const lon = coords.longitude.toFixed(6);
+        const accuracy = Math.round(coords.accuracy);
+
+        displayLatitude.textContent = lat;
+        displayLongitude.textContent = lon;
+        accuracyBadge.textContent = `Precisión: ±${accuracy} m`;
+        
+        if (accuracy <= 15) {
+          accuracyBadge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300';
+        } else if (accuracy <= 50) {
+          accuracyBadge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300';
+        } else {
+          accuracyBadge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-md bg-orange-100 text-orange-800 border border-orange-300';
+        }
+
+        const now = new Date();
+        timestampDisplay.textContent = `Hora: ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+
+        const mapsUrl = `https://maps.google.com/?q=${lat},${lon}`;
+        googleMapsLink.href = mapsUrl;
+
+        // Construcción del mensaje para WhatsApp
+        const fullNumber = getSanitizedFullNumber();
+        const message = 
+`📍 *Mi ubicación actual:*
+• Latitud: ${lat}
+• Longitud: ${lon}
+• Precisión: ±${accuracy} m
+
+🗺️ *Ver en Google Maps:*
+${mapsUrl}`;
+
+        const encodedMessage = encodeURIComponent(message);
+        // Si hay número destino va directo al chat; si no, abre el selector de chats/grupos de WhatsApp
+        const waUrl = fullNumber 
+          ? `https://wa.me/${fullNumber}?text=${encodedMessage}`
+          : `https://wa.me/?text=${encodedMessage}`;
+
+        whatsappDirectLink.href = waUrl;
+        triggerWhatsApp(waUrl);
+      }
+
+      function triggerWhatsApp(url) {
+        const win = window.open(url, '_blank');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+          console.info('Apertura automática bloqueada. Usa el botón "Abrir WhatsApp".');
+        }
+      }
+
+      // 7. Manejo de Geolocalización (1 Clic)
+      function handleGetLocation() {
+        const fullNumber = getSanitizedFullNumber();
+        if (!isAnyChatMode && !urlPreconfiguredPhone && !fullNumber) {
+          showError('Número requerido', 'Por favor, ingresa un número de teléfono o pulsa "¿Elegir chat/grupo al enviar?"');
+          phoneInput.focus();
+          return;
+        }
+
+        if (!('geolocation' in navigator)) {
+          showError('No soportado', 'Tu navegador o dispositivo no soporta geolocalización.');
+          return;
+        }
+
+        setLoading(true);
+
+        const geoOptions = {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        };
+
+        navigator.geolocation.getCurrentPosition(
+          (pos) => showSuccess(pos.coords),
+          (err) => handleGeoError(err),
+          geoOptions
+        );
+      }
+
+      function handleGeoError(error) {
+        let title = 'Error de ubicación';
+        let msg = 'No se pudo obtener la posición GPS.';
+
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            title = 'Permiso denegado';
+            msg = 'Has rechazado el acceso al GPS. Para compartir tu ubicación, activa los permisos de ubicación para esta web en tu navegador.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            title = 'GPS no disponible';
+            msg = 'No se pudo determinar tu posición. Verifica que la ubicación/GPS de tu teléfono esté activada.';
+            break;
+          case error.TIMEOUT:
+            title = 'Tiempo agotado (10s)';
+            msg = 'El GPS tardó más de 10 segundos en responder. Acércate a una ventana o sal a cielo abierto y reintenta.';
+            break;
+          default:
+            title = 'Error inesperado';
+            msg = error.message || 'Ocurrió un error al consultar las coordenadas.';
+            break;
+        }
+
+        showError(title, msg);
+      }
+
+      // 8. Copiar coordenadas
+      btnCopyCoords.addEventListener('click', async () => {
+        const lat = displayLatitude.textContent;
+        const lon = displayLongitude.textContent;
+        const text = `${lat}, ${lon}`;
+        try {
+          await navigator.clipboard.writeText(text);
+          copyBtnText.textContent = '¡Copiado!';
+          setTimeout(() => {
+            copyBtnText.textContent = 'Copiar';
+          }, 2000);
+        } catch (err) {
+          const tempInput = document.createElement('input');
+          tempInput.value = text;
+          document.body.appendChild(tempInput);
+          tempInput.select();
+          document.execCommand('copy');
+          document.body.removeChild(tempInput);
+          copyBtnText.textContent = '¡Copiado!';
+          setTimeout(() => {
+            copyBtnText.textContent = 'Copiar';
+          }, 2000);
+        }
+      });
+
+      // Eventos
+      btnGetLocation.addEventListener('click', handleGetLocation);
+      btnRetry.addEventListener('click', handleGetLocation);
+      phoneInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleGetLocation();
+      });
+
+      // Inicialización
+      checkUrlParams();
+      checkSecurityContext();
+      loadSavedPreferences();
+    })();
+  </script>
+</body>
+</html>

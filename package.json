@@ -1,0 +1,22 @@
+{
+  "name": "gpsc-whatsapp",
+  "version": "1.1.0",
+  "description": "Aplicación web mobile-first para obtener coordenadas GPS y compartirlas por WhatsApp, optimizada para Vercel",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve -l 3000 .",
+    "serve": "python3 -m http.server 3000",
+    "dev": "npx serve -l 3000 .",
+    "deploy": "npx vercel"
+  },
+  "keywords": [
+    "gps",
+    "geolocation",
+    "whatsapp",
+    "tailwind",
+    "mobile-first",
+    "vercel"
+  ],
+  "author": "",
+  "license": "MIT"
+}
